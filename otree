@@ -2,23 +2,41 @@
 # -*- coding: utf-8 -*-
 import os
 
+
+class bcolors:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+
+
+def ignore(filename):
+    if filename[0] == ".":
+        return True
+    return False
+
+
 def getList(map, count, path, indentchars, noset=False):
     files = os.listdir(path)
-    files = [f for f in files if f[0] is not '.']
+    files = [f for f in files if not ignore(f)]
     files.sort()
 
-    for f in files:
+    for idx, f in enumerate(files):
         child_path = path + "/" + f
         is_file = os.path.isfile(child_path)
-        is_last = files.index(f) == len(files)-1
+        is_last = idx == len(files)-1
         if is_file:
-            print indentchars + (u"└── " if is_last else u"├── ") + f + " ===> " + str(count)
+            print indentchars +  (u"└── " if is_last else u"├── ") + bcolors.HEADER + f +  \
+                  bcolors.ENDC +bcolors.WARNING +" ===> " + str(count) + bcolors.ENDC
             map[count] = child_path
             count += 1
         else:
             print indentchars + (u"└── " if is_last else u"├── ")+ f
             noset = True if is_last else False
-            count = getList(map, count, child_path, indentchars + ("    " if noset else u"│   "), noset)
+            count = getList(map, count, child_path, indentchars +
+                            ("    " if noset else u"│   "), noset)
     return count
 
 
@@ -26,11 +44,14 @@ def main():
     dir = os.getcwd()
     file_no_map = {}
     print "."
-    getList(file_no_map, 1, dir, "", False)
+    count = getList(file_no_map, 1, dir, "", False)
     try:
         no = input("Open file with no: ")
-        print file_no_map[no]
-        os.system("open " + file_no_map[no])
+        if no > 0 and no < count:
+            print file_no_map[no]
+            os.system("open " + file_no_map[no])
+        else:
+            print "Invalid number"
     except SyntaxError:
         pass
 
